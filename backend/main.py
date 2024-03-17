@@ -1,10 +1,12 @@
-import psycopg2
-from fastapi import FastAPI, HTTPException, Header, Form, Depends 
+from fastapi import FastAPI, HTTPException, Header, Form, Depends, UploadFile, File
 from datetime import datetime, date, timedelta
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import config
 from hashlib import sha256
+from sqlalchemy.orm import Session
+import os
+from psycopg2.extensions import connection
 
 from authentication import create_jwt_token, verify_jwt_token, verify_user_from_db
 from database import get_db
@@ -19,9 +21,16 @@ app = FastAPI()
 class User(BaseModel):
     username:str
     password:str
+    email:str
     birthday:date = None
     last_login:datetime = None
     create_time:datetime = datetime.utcnow()
+
+class Video(BaseModel):
+    title: str
+    description: str
+    video_file: UploadFile
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,60 +40,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-'''
-# def connect_to_db():
-#     return psycopg2.connect(DATABASE_URL)
-
-# def get_db():
-#     db = connect_to_db()
-#     try:
-#         yield db
-#     finally:
-#         db.close()
-
-# @app.on_event("startup")
-# def startup():
-#     app.db_connection = connect_to_db()
-
-# @app.on_event("shutdown")
-# def shutdown():
-#     app.db_connection.close()
-
-
-# def verify_user_from_db(username: str, db: psycopg2.extensions.connection):
-#     query = 'SELECT "UserName", "password" FROM public."user" WHERE "UserName" = %s'
-#     cursor = db.cursor()
-#     cursor.execute(query, (username,))
-#     result = cursor.fetchone()
-#     cursor.close()
-#     if result:
-#         username, password = result
-#         return password
-#     return None
-
-# def create_jwt_token(username: str) -> str:
-#     expiration = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-#     payload = {"username": username, "exp": expiration}
-#     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
-
-
-# def verify_jwt_token(token: str) -> dict:
-#     try:
-#         return jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-#     except:
-#         raise HTTPException(status_code=401, detail="Invalid token signature")
-
-'''
-
-def update_last_login(username: str, last_login: datetime, db: psycopg2.extensions.connection):
-    update_query = 'UPDATE public."user" SET "last_login" = %s WHERE "UserName" = %s'
+def update_last_login(username: str, last_login: datetime, db: connection):
+    update_query = 'UPDATE public."users" SET "last_login" = %s WHERE "username" = %s'
     cursor = db.cursor()
     cursor.execute(update_query, (last_login, username))
     db.commit()
     cursor.close()
     return {"message": "last_login updated"}
 
-def verify_identity(token: str = Header(..., convert_underscores=True), db: psycopg2.extensions.connection = Depends(get_db)):
+def verify_identity(token: str = Header(..., convert_underscores=True), db: connection = Depends(get_db)):
     payload = verify_jwt_token(token)
     username = payload["username"]
     stored_password = verify_user_from_db(username, db)
@@ -93,7 +57,7 @@ def verify_identity(token: str = Header(..., convert_underscores=True), db: psyc
     return (True,username)
 
 @app.post("/login")
-async def login(username: str = Form(...), password: str = Form(...), db: psycopg2.extensions.connection = Depends(get_db)):
+async def login(username: str = Form(...), password: str = Form(...), db: connection = Depends(get_db)):
     stored_password = verify_user_from_db(username, db)
     password_hash = sha256(password.encode('utf-8')).hexdigest()
     if stored_password is None or password_hash != stored_password:
@@ -107,12 +71,11 @@ async def login(username: str = Form(...), password: str = Form(...), db: psycop
     return {"username": username, "token": jwt_token}
 
 @app.get("/user/")
-def get_username(Authorization:str = Header(...), db: psycopg2.extensions.connection = Depends(get_db)):
+def get_username(Authorization:str = Header(...), db: connection = Depends(get_db)):
     result = verify_identity(Authorization, db)
     if result[0]:
         username = result[1]
-        query = 'SELECT * FROM public."user" WHERE "UserName" = %s'
-        # conn = app.db_connection
+        query = 'SELECT * FROM public."users" WHERE "username" = %s'
         cursor = db.cursor()
         cursor.execute(query, (username,))
 
@@ -133,14 +96,10 @@ def get_username(Authorization:str = Header(...), db: psycopg2.extensions.connec
     else:
        raise HTTPException(status_code=401, detail="Unauthorized")
 
-
 @app.post("/user/")
-def create_user(user: User, db: psycopg2.extensions.connection = Depends(get_db)):#, Authorization:str = Header(...)):
-    # if verify_identity(Authorization):
-        query = 'SELECT COUNT(*) FROM public."user" WHERE "UserName" = %s'
-        insert_query = 'INSERT INTO public."user" ("UserName", "password", "create_time", "birthday") VALUES (%s, %s, %s, %s)'
-
-        # conn = app.db_connection
+def create_user(user: User, db: connection = Depends(get_db)):
+        query = 'SELECT COUNT(*) FROM public."users" WHERE "username" = %s'
+        insert_query = 'INSERT INTO public."users" ("username", "password", "create_time", "birthday") VALUES (%s, %s, %s, %s)'
         cursor = db.cursor()
 
         cursor.execute(query, (user.username,))
@@ -158,17 +117,16 @@ def create_user(user: User, db: psycopg2.extensions.connection = Depends(get_db)
     #    raise HTTPException(status_code=401, detail="Unauthorized")
 
 @app.delete("/user/")
-def delete_user(username: str = Form(...), Authorization:str = Header(...), db: psycopg2.extensions.connection = Depends(get_db)):
-#def delete_user(Authorization:str = Header(...)):
+def delete_user(username: str = Form(...), Authorization:str = Header(...), db: connection = Depends(get_db)):
     result = verify_identity(Authorization, db)
     if result[0]:
         if(result[1] != 'admin'):#verify
             raise HTTPException(status_code=401, detail="Not admin")
         if(username == 'admin'):#prevent from deleting admin
             raise HTTPException(status_code=403, detail="Admin cannot be deleted")
-        query = 'SELECT COUNT(*) FROM public."user" WHERE "UserName" = %s'
-        delete_query = 'DELETE FROM public."user" WHERE "UserName" = %s'
-        # conn = app.db_connection
+        query = 'SELECT COUNT(*) FROM public."users" WHERE "username" = %s'
+        delete_query = 'DELETE FROM public."users" WHERE "username" = %s'
+
         cursor = db.cursor()
         cursor.execute(query, (username,))
         count = cursor.fetchone()[0]
@@ -184,17 +142,16 @@ def delete_user(username: str = Form(...), Authorization:str = Header(...), db: 
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 @app.patch("/user/")
-def update_user(user:User, Authorization:str = Header(...), db: psycopg2.extensions.connection = Depends(get_db)):
+def update_user(user:User, Authorization:str = Header(...), db: connection = Depends(get_db)):
     result = verify_identity(Authorization, db)
     if result[0]:
         # check if empty
         user.username = result[1]
         if not user.username or not user.password:
             raise HTTPException(status_code=400, detail="Invalid update data")
-        query = 'SELECT COUNT(*) FROM public."user" WHERE "UserName" = %s'
-        update_query = 'UPDATE public."user" SET "password" = %s, "birthday" = %s WHERE "UserName" = %s'
+        query = 'SELECT COUNT(*) FROM public."users" WHERE "username" = %s'
+        update_query = 'UPDATE public."users" SET "password" = %s, "birthday" = %s WHERE "username" = %s'
 
-        # conn = app.db_connection
         cursor = db.cursor()
 
         cursor.execute(query, (user.username,))
@@ -211,14 +168,13 @@ def update_user(user:User, Authorization:str = Header(...), db: psycopg2.extensi
 
 
 @app.get("/")
-def get_all_users(Authorization:str = Header(...), db: psycopg2.extensions.connection = Depends(get_db)):
+def get_all_users(Authorization:str = Header(...), db: connection = Depends(get_db)):
     result = verify_identity(Authorization, db)
     if result[0]:
         username = result[1]
         if(username != 'admin'):
             raise HTTPException(status_code=401, detail="Unauthorized")
-        query = 'SELECT * FROM public."user" WHERE "UserName" <> \'admin\' ORDER BY "UserName" ASC '
-        # conn = app.db_connection
+        query = 'SELECT * FROM public."users" WHERE "username" <> \'admin\' ORDER BY "username" ASC '
         cursor = db.cursor()
         cursor.execute(query)
         users = []
@@ -234,3 +190,25 @@ def get_all_users(Authorization:str = Header(...), db: psycopg2.extensions.conne
             users.append(user)
         cursor.close()
         return {"users": users}
+    
+# @app.post("/upload-video/")
+# async def upload_video(video_data: Video, username: str = Header(...), db: connection = Depends(get_db)):
+#     # Save video file to server
+#     with open(f"videos/{video_data.title}.mp4", "wb") as f:
+#         f.write(video_data.video_data)
+
+#     # Create video record in database
+#     insert_query = 'INSERT INTO videos (title, description, filename) VALUES (%s, %s, %s) RETURNING video_id'
+#     cursor = db.cursor()
+#     cursor.execute(insert_query, (video_data.title, video_data.description, f"{video_data.title}.mp4"))
+#     video_id = cursor.fetchone()[0]
+#     db.commit()
+
+#     # Associate uploaded video with user
+#     insert_user_video_query = 'INSERT INTO user_videos (username, video_id) VALUES (%s, %s)'
+#     cursor.execute(insert_user_video_query, (username, video_id))
+#     db.commit()
+
+#     cursor.close()
+
+#     return {"message": "Video uploaded successfully"}

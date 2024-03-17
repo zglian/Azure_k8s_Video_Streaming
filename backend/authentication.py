@@ -22,7 +22,7 @@ def verify_jwt_token(token: str) -> dict:
         raise HTTPException(status_code=401, detail="Invalid token signature")
     
 def verify_user_from_db(username: str, db: psycopg2.extensions.connection):
-    query = 'SELECT "UserName", "password" FROM public."user" WHERE "UserName" = %s'
+    query = 'SELECT "username", "password" FROM public."users" WHERE "username" = %s'
     cursor = db.cursor()
     cursor.execute(query, (username,))
     result = cursor.fetchone()

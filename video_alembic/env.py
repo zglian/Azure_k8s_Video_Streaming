@@ -4,7 +4,7 @@ from sqlalchemy import pool
 from sqlalchemy import MetaData
 
 from alembic import context
-from video_alembic.video import User, Video, UserVideo
+from video_alembic.models import User, Video, UserVideo
 
 
 # this is the Alembic Config object, which provides
