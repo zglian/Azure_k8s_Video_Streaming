@@ -6,8 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import config
 from hashlib import sha256
 
-# from database import connect_to_db, get_db
 from authentication import create_jwt_token, verify_jwt_token, verify_user_from_db
+from database import get_db
 
 DATABASE_URL = config.DATABASE_URL
 SECRET_KEY = config.SECRET_KEY 
@@ -23,7 +23,6 @@ class User(BaseModel):
     last_login:datetime = None
     create_time:datetime = datetime.utcnow()
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,6 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+'''
 # def connect_to_db():
 #     return psycopg2.connect(DATABASE_URL)
 
@@ -42,7 +42,6 @@ app.add_middleware(
 #     finally:
 #         db.close()
 
-'''
 # @app.on_event("startup")
 # def startup():
 #     app.db_connection = connect_to_db()
@@ -50,7 +49,7 @@ app.add_middleware(
 # @app.on_event("shutdown")
 # def shutdown():
 #     app.db_connection.close()
-'''
+
 
 # def verify_user_from_db(username: str, db: psycopg2.extensions.connection):
 #     query = 'SELECT "UserName", "password" FROM public."user" WHERE "UserName" = %s'
@@ -68,6 +67,15 @@ app.add_middleware(
 #     payload = {"username": username, "exp": expiration}
 #     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
+
+# def verify_jwt_token(token: str) -> dict:
+#     try:
+#         return jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+#     except:
+#         raise HTTPException(status_code=401, detail="Invalid token signature")
+
+'''
+
 def update_last_login(username: str, last_login: datetime, db: psycopg2.extensions.connection):
     update_query = 'UPDATE public."user" SET "last_login" = %s WHERE "UserName" = %s'
     cursor = db.cursor()
@@ -75,12 +83,6 @@ def update_last_login(username: str, last_login: datetime, db: psycopg2.extensio
     db.commit()
     cursor.close()
     return {"message": "last_login updated"}
-
-# def verify_jwt_token(token: str) -> dict:
-#     try:
-#         return jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-#     except:
-#         raise HTTPException(status_code=401, detail="Invalid token signature")
 
 def verify_identity(token: str = Header(..., convert_underscores=True), db: psycopg2.extensions.connection = Depends(get_db)):
     payload = verify_jwt_token(token)
