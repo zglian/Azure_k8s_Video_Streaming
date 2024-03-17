@@ -1,11 +1,13 @@
 import psycopg2
 from fastapi import FastAPI, HTTPException, Header, Form, Depends 
 from datetime import datetime, date, timedelta
-from jose import jwt
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import config
 from hashlib import sha256
+
+# from database import connect_to_db, get_db
+from authentication import create_jwt_token, verify_jwt_token, verify_user_from_db
 
 DATABASE_URL = config.DATABASE_URL
 SECRET_KEY = config.SECRET_KEY 
@@ -30,16 +32,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def connect_to_db():
-    return psycopg2.connect(DATABASE_URL)
+# def connect_to_db():
+#     return psycopg2.connect(DATABASE_URL)
 
-def get_db():
-    db = connect_to_db()
-    try:
-        yield db
-    finally:
-        db.close()
+# def get_db():
+#     db = connect_to_db()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
 
+'''
 # @app.on_event("startup")
 # def startup():
 #     app.db_connection = connect_to_db()
@@ -47,38 +50,37 @@ def get_db():
 # @app.on_event("shutdown")
 # def shutdown():
 #     app.db_connection.close()
+'''
 
-def verify_user_from_db(username: str, db: psycopg2.extensions.connection):
-    query = 'SELECT "UserName", "password" FROM public."user" WHERE "UserName" = %s'
-    # conn = app.db_connection
-    cursor = db.cursor()
-    cursor.execute(query, (username,))
-    result = cursor.fetchone()
-    cursor.close()
-    if result is None:
-        return None
-    username, password = result
-    return password
+# def verify_user_from_db(username: str, db: psycopg2.extensions.connection):
+#     query = 'SELECT "UserName", "password" FROM public."user" WHERE "UserName" = %s'
+#     cursor = db.cursor()
+#     cursor.execute(query, (username,))
+#     result = cursor.fetchone()
+#     cursor.close()
+#     if result:
+#         username, password = result
+#         return password
+#     return None
 
-def create_jwt_token(username: str) -> str:
-    expiration = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    payload = {"username": username, "exp": expiration}
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+# def create_jwt_token(username: str) -> str:
+#     expiration = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+#     payload = {"username": username, "exp": expiration}
+#     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 def update_last_login(username: str, last_login: datetime, db: psycopg2.extensions.connection):
     update_query = 'UPDATE public."user" SET "last_login" = %s WHERE "UserName" = %s'
-    # conn = app.db_connection
     cursor = db.cursor()
     cursor.execute(update_query, (last_login, username))
     db.commit()
     cursor.close()
     return {"message": "last_login updated"}
 
-def verify_jwt_token(token: str) -> dict:
-    try:
-        return jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
-    except:
-        raise HTTPException(status_code=401, detail="Invalid token signature")
+# def verify_jwt_token(token: str) -> dict:
+#     try:
+#         return jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
+#     except:
+#         raise HTTPException(status_code=401, detail="Invalid token signature")
 
 def verify_identity(token: str = Header(..., convert_underscores=True), db: psycopg2.extensions.connection = Depends(get_db)):
     payload = verify_jwt_token(token)
