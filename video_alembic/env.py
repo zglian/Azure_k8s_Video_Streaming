@@ -1,8 +1,10 @@
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+from sqlalchemy import MetaData
 
 from alembic import context
+from video_alembic.video import User, Video, UserVideo
 
 
 # this is the Alembic Config object, which provides
@@ -18,7 +20,17 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+# target_metadata = [User.metadata, Video.metadata, UserVideo.metadata]
+
+
+
+ # Create a new MetaData object
+target_metadata = MetaData()
+
+# Add tables from each model to the target_metadata
+User.__table__.tometadata(target_metadata)
+Video.__table__.tometadata(target_metadata)
+UserVideo.__table__.tometadata(target_metadata)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
