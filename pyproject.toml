@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "fullend"
+version = "0.1.0"
+description = ""
+authors = ["zglian <f74102030@gs.ncku.edu.tw>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+alembic = "^1.13.1"
+fastapi = "^0.110.0"
+psycopg2-binary = "^2.9.9"
+sqlalchemy = "^2.0.28"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
