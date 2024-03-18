@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException, Header, Form, Depends, UploadFile, File
-from datetime import datetime, date, timedelta
-from pydantic import BaseModel
+from datetime import datetime, date
 from fastapi.middleware.cors import CORSMiddleware
 import config
 from hashlib import sha256
@@ -19,20 +18,6 @@ ALGORITHM = config.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES= config.ACCESS_TOKEN_EXPIRE_MINUTES
 
 app = FastAPI()
-
-'''class User(BaseModel):
-    username:str
-    password:str
-    email:str
-    birthday:date = None
-    last_login:datetime = None
-    create_time:datetime = datetime.utcnow()
-
-class Video(BaseModel):
-    title: str
-    description: str
-    video_file: UploadFile'''
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -128,7 +113,6 @@ def update_user(user: UserModel, Authorization: str = Header(...), db: Session =
     db.commit()
     return {"message": "User updated"}
 
-
 @app.get("/")
 def get_all_users(Authorization:str = Header(...), db: Session = Depends(get_db)):
     user = verify_identity(Authorization, db)
@@ -148,22 +132,6 @@ def get_all_users(Authorization:str = Header(...), db: Session = Depends(get_db)
         users.append(user_data)
 
     return {"users": users}
-'''    query = 'SELECT * FROM public."users" WHERE "username" <> \'admin\' ORDER BY "username" ASC '
-    cursor = db.cursor()
-    cursor.execute(query)
-    users = []
-    rows = cursor.fetchall()
-    for row in rows:
-        user = {
-            "name": row[0],
-            "password": row[1],
-            "birthday": row[2],
-            "last_login": row[3],
-            "create_time": row[4],
-        }
-        users.append(user)
-    cursor.close()
-    return {"users": users}'''
     
 # @app.post("/upload-video/")
 # async def upload_video(video_data: Video, username: str = Header(...), db: connection = Depends(get_db)):
