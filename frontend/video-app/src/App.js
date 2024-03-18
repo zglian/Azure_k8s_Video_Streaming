@@ -1,24 +1,36 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import {BrowserRouter, Route, Routes } from "react-router-dom";
+import {
+  ChakraProvider,
+  Box,
+  theme,
+} from '@chakra-ui/react';
+import LoginPage from './LoginPage';
+import Home from './Home';
+import RegisterPage from './RegisterPage';
+import AdminPage from './AdminPage';
+import UserPage from './UserPage';
 
 function App() {
+  const [token, setToken] = useState(''); 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ChakraProvider theme={theme}>
+      <Box bg="gray.200" minH="100vh" py={8}>
+        {/* <Text>{token}</Text> */}
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<LoginPage setNewToken={setToken}/>} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route 
+                path="/admin"
+                element={<AdminPage token={token} />} 
+              />
+              <Route path="/user" element={<UserPage token={token} />} />
+            </Routes>
+          </BrowserRouter>
+      </Box>
+    </ChakraProvider>
   );
 }
 
