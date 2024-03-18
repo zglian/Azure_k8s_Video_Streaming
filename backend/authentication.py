@@ -2,7 +2,8 @@ from fastapi import HTTPException
 from jose import jwt
 from datetime import datetime, date, timedelta
 import config
-import psycopg2
+from sqlalchemy.orm import Session
+from models import User
 
 DATABASE_URL = config.DATABASE_URL
 SECRET_KEY = config.SECRET_KEY 
@@ -20,14 +21,10 @@ def verify_jwt_token(token: str) -> dict:
         return jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
     except:
         raise HTTPException(status_code=401, detail="Invalid token signature")
-    
-def verify_user_from_db(username: str, db: psycopg2.extensions.connection):
-    query = 'SELECT "username", "password" FROM public."users" WHERE "username" = %s'
-    cursor = db.cursor()
-    cursor.execute(query, (username,))
-    result = cursor.fetchone()
-    cursor.close()
-    if result:
-        username, password = result
-        return password
-    return None
+
+
+# def verify_user_from_db(username: str, db: Session):
+#     user = db.query(User).filter(User.username == username).first()
+#     if user and user.password:
+#         return user.password
+#     return None

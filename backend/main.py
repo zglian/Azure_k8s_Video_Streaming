@@ -7,8 +7,10 @@ from hashlib import sha256
 from sqlalchemy.orm import Session
 import os
 from psycopg2.extensions import connection
+from models import User, UserModel
+import pytz
 
-from authentication import create_jwt_token, verify_jwt_token, verify_user_from_db
+from authentication import create_jwt_token, verify_jwt_token
 from database import get_db
 
 DATABASE_URL = config.DATABASE_URL
@@ -18,7 +20,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES= config.ACCESS_TOKEN_EXPIRE_MINUTES
 
 app = FastAPI()
 
-class User(BaseModel):
+'''class User(BaseModel):
     username:str
     password:str
     email:str
@@ -29,7 +31,7 @@ class User(BaseModel):
 class Video(BaseModel):
     title: str
     description: str
-    video_file: UploadFile
+    video_file: UploadFile'''
 
 
 app.add_middleware(
@@ -40,156 +42,128 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def update_last_login(username: str, last_login: datetime, db: connection):
-    update_query = 'UPDATE public."users" SET "last_login" = %s WHERE "username" = %s'
-    cursor = db.cursor()
-    cursor.execute(update_query, (last_login, username))
-    db.commit()
-    cursor.close()
-    return {"message": "last_login updated"}
-
-def verify_identity(token: str = Header(..., convert_underscores=True), db: connection = Depends(get_db)):
+def verify_identity(token: str = Header(..., convert_underscores=True), db: Session= Depends(get_db)):
     payload = verify_jwt_token(token)
     username = payload["username"]
-    stored_password = verify_user_from_db(username, db)
-    if stored_password is None:
-         raise HTTPException(status_code=401, detail="User not found")
-    return (True,username)
+    user = db.query(User).filter(User.username == username).first()
+    return user
 
 @app.post("/login")
-async def login(username: str = Form(...), password: str = Form(...), db: connection = Depends(get_db)):
-    stored_password = verify_user_from_db(username, db)
+async def login(username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
     password_hash = sha256(password.encode('utf-8')).hexdigest()
-    if stored_password is None or password_hash != stored_password:
-        raise HTTPException(status_code=401, detail="Invalid")
+    user = db.query(User).filter(User.username == username).first()
+    if user is None or user.password is None or password_hash != user.password:
+        raise HTTPException(status_code=401, detail="Invalid account")
     
-    # update last_login
-    update_last_login(username, datetime.utcnow(), db)
-
+    taipei_timezone = pytz.timezone('Asia/Taipei')
+    user.last_login = datetime.now(taipei_timezone)
+    db.commit()
     # 先verify user 再create token
     jwt_token = create_jwt_token(username)
     return {"username": username, "token": jwt_token}
 
 @app.get("/user/")
-def get_username(Authorization:str = Header(...), db: connection = Depends(get_db)):
-    result = verify_identity(Authorization, db)
-    if result[0]:
-        username = result[1]
-        query = 'SELECT * FROM public."users" WHERE "username" = %s'
-        cursor = db.cursor()
-        cursor.execute(query, (username,))
-
-        row = cursor.fetchone()
-        cursor.close()
-        if row is None:
-            raise HTTPException(status_code=400, detail="User not found")
-
-        user = {
-            "username": row[0],
-            "password": row[1],
-            "birthday": row[2],
-            "last_login": row[3],
-            "create_time": row[4],
-            "nickName": row[5]
+def get_user_data(Authorization:str = Header(...), db: Session = Depends(get_db)):
+    user = verify_identity(Authorization, db)
+    if user.password:
+        return {
+            "user": {
+                "username": user.username,
+                "email": user.email,
+                # "password": user.password,
+                "birthday": user.birthday,
+                "last_login": user.last_login,
+                "create_time": user.create_time,
+            }
         }
-        return {"user":user}
     else:
        raise HTTPException(status_code=401, detail="Unauthorized")
 
 @app.post("/user/")
-def create_user(user: User, db: connection = Depends(get_db)):
-        query = 'SELECT COUNT(*) FROM public."users" WHERE "username" = %s'
-        insert_query = 'INSERT INTO public."users" ("username", "password", "create_time", "birthday") VALUES (%s, %s, %s, %s)'
-        cursor = db.cursor()
+def create_user(user : UserModel, db: Session = Depends(get_db)):
+    existing_user = db.query(User).filter(User.username == user.username).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="User already exists")
 
-        cursor.execute(query, (user.username,))
-        count = cursor.fetchone()[0]
-        if count > 0:
-            cursor.close()
-            raise HTTPException(status_code=400, detail="User already exists")
-        
-        password_hash = sha256(user.password.encode('utf-8')).hexdigest()
-        cursor.execute(insert_query, (user.username, password_hash, user.create_time, user.birthday))
-        db.commit()
-        cursor.close()
-        return {"message": "User created"}
-    # else:
-    #    raise HTTPException(status_code=401, detail="Unauthorized")
+    password_hash = sha256(user.password.encode('utf-8')).hexdigest()
+    new_user = User(username=user.username, password=password_hash, email = user.email, create_time=datetime.utcnow(), birthday=user.birthday)
+    db.add(new_user)
+    db.commit()
+    return {"message": "User created"}
 
 @app.delete("/user/")
 def delete_user(username: str = Form(...), Authorization:str = Header(...), db: connection = Depends(get_db)):
     result = verify_identity(Authorization, db)
-    if result[0]:
-        if(result[1] != 'admin'):#verify
-            raise HTTPException(status_code=401, detail="Not admin")
-        if(username == 'admin'):#prevent from deleting admin
-            raise HTTPException(status_code=403, detail="Admin cannot be deleted")
-        query = 'SELECT COUNT(*) FROM public."users" WHERE "username" = %s'
-        delete_query = 'DELETE FROM public."users" WHERE "username" = %s'
+    if(result.username != 'admin'):
+        raise HTTPException(status_code=401, detail="Not admin")
+    
+    if(username == 'admin'):
+        #prevent from deleting admin
+        raise HTTPException(status_code=403, detail="Admin cannot be deleted")
+    
+    existing_user = db.query(User).filter(User.username == username).first()
+    if not existing_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete(existing_user)
+    db.commit()
 
-        cursor = db.cursor()
-        cursor.execute(query, (username,))
-        count = cursor.fetchone()[0]
-        if count == 0:
-            cursor.close()
-            raise HTTPException(status_code=400, detail="User does not exist")
-
-        cursor.execute(delete_query, (username,))
-        db.commit()
-        cursor.close()
-        return {"message": "User deleted"}
-    else:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+    return {"message": "User deleted"}
 
 @app.patch("/user/")
-def update_user(user:User, Authorization:str = Header(...), db: connection = Depends(get_db)):
+def update_user(user: UserModel, Authorization: str = Header(...), db: Session = Depends(get_db)):
+    if not user.username or not user.password:
+        raise HTTPException(status_code=400, detail="Invalid update data: Password is required")
+    
     result = verify_identity(Authorization, db)
-    if result[0]:
-        # check if empty
-        user.username = result[1]
-        if not user.username or not user.password:
-            raise HTTPException(status_code=400, detail="Invalid update data")
-        query = 'SELECT COUNT(*) FROM public."users" WHERE "username" = %s'
-        update_query = 'UPDATE public."users" SET "password" = %s, "birthday" = %s WHERE "username" = %s'
-
-        cursor = db.cursor()
-
-        cursor.execute(query, (user.username,))
-        count = cursor.fetchone()[0]
-        if count == 0:
-            cursor.close()
-            raise HTTPException(status_code=400, detail="User does not exist")
-
-        password_hash = sha256(user.password.encode('utf-8')).hexdigest()
-        cursor.execute(update_query, (password_hash, user.birthday, user.username))
-        db.commit()
-        cursor.close()
-        return {"message": "User updated"}
+    if user.username != result.username:
+        raise HTTPException(status_code=403, detail="Forbidden: User can only update their own information")
+    
+    existing_user = db.query(User).filter(User.username == user.username).first()
+    if not existing_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    existing_user.password = sha256(user.password.encode('utf-8')).hexdigest()
+    existing_user.birthday = user.birthday
+    existing_user.email = user.email
+    db.commit()
+    return {"message": "User updated"}
 
 
 @app.get("/")
-def get_all_users(Authorization:str = Header(...), db: connection = Depends(get_db)):
-    result = verify_identity(Authorization, db)
-    if result[0]:
-        username = result[1]
-        if(username != 'admin'):
-            raise HTTPException(status_code=401, detail="Unauthorized")
-        query = 'SELECT * FROM public."users" WHERE "username" <> \'admin\' ORDER BY "username" ASC '
-        cursor = db.cursor()
-        cursor.execute(query)
-        users = []
-        rows = cursor.fetchall()
-        for row in rows:
-            user = {
-                "name": row[0],
-                "password": row[1],
-                "birthday": row[2],
-                "last_login": row[3],
-                "create_time": row[4],
-            }
-            users.append(user)
-        cursor.close()
-        return {"users": users}
+def get_all_users(Authorization:str = Header(...), db: Session = Depends(get_db)):
+    user = verify_identity(Authorization, db)
+    if(user.username != 'admin'):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    users_from_db = db.query(User).filter(User.username != 'admin').order_by(User.username.asc()).all()
+    users = []
+    for user in users_from_db:
+        user_data = {
+            "name": user.username,
+            "email": user.email,
+            "birthday": user.birthday,
+            "last_login": user.last_login,
+            "create_time": user.create_time,
+        }
+        users.append(user_data)
+
+    return {"users": users}
+'''    query = 'SELECT * FROM public."users" WHERE "username" <> \'admin\' ORDER BY "username" ASC '
+    cursor = db.cursor()
+    cursor.execute(query)
+    users = []
+    rows = cursor.fetchall()
+    for row in rows:
+        user = {
+            "name": row[0],
+            "password": row[1],
+            "birthday": row[2],
+            "last_login": row[3],
+            "create_time": row[4],
+        }
+        users.append(user)
+    cursor.close()
+    return {"users": users}'''
     
 # @app.post("/upload-video/")
 # async def upload_video(video_data: Video, username: str = Header(...), db: connection = Depends(get_db)):
