@@ -6,14 +6,16 @@ from hashlib import sha256
 from sqlalchemy.orm import Session
 import os
 from psycopg2.extensions import connection
-from models import User, UserModel
+from models import *
 import pytz
+from pathlib import Path
+import uuid
 
 from authentication import create_jwt_token, verify_jwt_token
 from database import get_db
 
 DATABASE_URL = config.DATABASE_URL
-SECRET_KEY = config.SECRET_KEY 
+SECRET_KEY = config.SECRET_KEY
 ALGORITHM = config.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES= config.ACCESS_TOKEN_EXPIRE_MINUTES
 
@@ -77,7 +79,7 @@ def create_user(user : UserModel, db: Session = Depends(get_db)):
     return {"message": "User created"}
 
 @app.delete("/user/")
-def delete_user(username: str = Form(...), Authorization:str = Header(...), db: connection = Depends(get_db)):
+def delete_user(username: str = Form(...), Authorization:str = Header(...), db: Session = Depends(get_db)):
     result = verify_identity(Authorization, db)
     if(result.username != 'admin'):
         raise HTTPException(status_code=401, detail="Not admin")
@@ -132,25 +134,47 @@ def get_all_users(Authorization:str = Header(...), db: Session = Depends(get_db)
         users.append(user_data)
 
     return {"users": users}
+
+@app.post("/upload-video/")
+async def upload_video(video_upload: VideoModel, video_data: UploadFile = File(...), db: Session = Depends(get_db)):
+    title = video_upload.title
+    description = video_upload.description
+    # title = "video1"
+    # description = "video_upload.description"
     
-# @app.post("/upload-video/")
-# async def upload_video(video_data: Video, username: str = Header(...), db: connection = Depends(get_db)):
-#     # Save video file to server
-#     with open(f"videos/{video_data.title}.mp4", "wb") as f:
-#         f.write(video_data.video_data)
+    # with open(f"../video_dataset/{video_data.filename}", "wb") as f:
+    #     f.write(video_data.file.read())
 
-#     # Create video record in database
-#     insert_query = 'INSERT INTO videos (title, description, filename) VALUES (%s, %s, %s) RETURNING video_id'
-#     cursor = db.cursor()
-#     cursor.execute(insert_query, (video_data.title, video_data.description, f"{video_data.title}.mp4"))
-#     video_id = cursor.fetchone()[0]
-#     db.commit()
+    video_file_path = '../video_dataset/video-1.mp4'  # 更新為影片檔案的正確路徑
+    with open(video_file_path, 'rb') as f:
+        video_data = f.read()
 
-#     # Associate uploaded video with user
-#     insert_user_video_query = 'INSERT INTO user_videos (username, video_id) VALUES (%s, %s)'
-#     cursor.execute(insert_user_video_query, (username, video_id))
-#     db.commit()
+    # video_id = uuid.uuid4()
 
-#     cursor.close()
+    new_video = Video(title=title, description=description, video_data=video_data)
+    db.add(new_video)
+    db.commit()
 
-#     return {"message": "Video uploaded successfully"}
+    # # 關聯上傳的視頻與用戶
+    # new_video.usernames.append(username)
+    db.commit()
+    return {"message": "Video uploaded successfully"}
+
+@app.post("/watch-video/{video_id}/")
+def watch_video(video_id: int, Authorization: str = Header(...), db: Session = Depends(get_db)):
+    user = verify_identity(Authorization, db)
+    
+    video = db.query(Video).filter(Video.video_id == video_id).first()
+    if not video:
+        raise HTTPException(status_code=404, detail="Video not found")
+
+    # 標記該用戶觀看了這個影片
+    user_video = db.query(UserVideo).filter(UserVideo.username == user.username, UserVideo.video_id == video_id).first()
+    if user_video:
+        user_video.watched_at = datetime.utcnow()
+    else:
+        user_video = UserVideo(username=user.username, video_id=video_id, watched_at=datetime.utcnow())
+        db.add(user_video)
+    
+    db.commit()
+    return {"message": "Video watched successfully"}

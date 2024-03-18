@@ -2,8 +2,8 @@ from fastapi import HTTPException
 from jose import jwt
 from datetime import datetime, date, timedelta
 import config
-from sqlalchemy.orm import Session
-from models import User
+# from sqlalchemy.orm import Session
+# from models import User
 
 DATABASE_URL = config.DATABASE_URL
 SECRET_KEY = config.SECRET_KEY 

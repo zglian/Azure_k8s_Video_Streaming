@@ -3,6 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime, date
 from pydantic import BaseModel
+from fastapi import UploadFile
 
 Base = declarative_base()
 
@@ -11,6 +12,11 @@ class UserModel(BaseModel):
     password: str
     email: str
     birthday: date
+
+class VideoModel(BaseModel):
+    video_id: int
+    title: str
+    description: str 
 
 class User(Base):
     __tablename__ = 'users'
@@ -21,8 +27,6 @@ class User(Base):
     birthday = Column(Date)
     last_login = Column(DateTime(timezone=True))
     create_time = Column(DateTime(timezone=True), default=datetime.utcnow)
-
-
 
 class Video(Base):
     __tablename__ = 'videos'
@@ -35,8 +39,9 @@ class Video(Base):
 class UserVideo(Base):
     __tablename__ = 'user_videos'
 
-    username = Column(String, ForeignKey('users.username'), primary_key=True)
+    username = Column(String, ForeignKey('users.username'), primary_key=True,)
     video_id = Column(Integer, ForeignKey('videos.video_id'), primary_key=True)
+    watched_at = Column(DateTime(timezone=True), default=datetime.utcnow)
 
     user = relationship("User", backref="user_videos")
     video = relationship("Video", backref="user_videos")

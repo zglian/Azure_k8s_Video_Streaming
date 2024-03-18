@@ -13,7 +13,7 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-# 讀取影片檔案的二進位數據
+# 讀取影片檔案的二進位數據vb
 video_file_path = 'video_dataset/video-4.mp4'  # 更新為影片檔案的正確路徑
 with open(video_file_path, 'rb') as f:
     video_data = f.read()
