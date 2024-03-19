@@ -14,6 +14,7 @@ function RegisterPage(){
     const [message, setMessage] = useState('');
     const [createUserData, setCreateUserData] = useState({
         username: '',
+        email: '',
         password: '',
         birthday: '',
       });
@@ -28,15 +29,13 @@ function RegisterPage(){
       })
         .then((response) => {
         if (response.ok){
-            setMessage(`User ${createUserData.username} created`);
-            setCreateUserData({username: '', password: '', birthday:''});
+            setMessage(`${createUserData.username} created`);
+            setCreateUserData({username: '', email: '', password: '', birthday:''});
         }            
         else
-            setMessage(`User ${createUserData.username} already exists`);
+            setMessage(`${createUserData.username} already exists`);
         })    
   };
-
-
   return(
     <Center minH="80vh">
         <VStack spacing={4}  align="center">
@@ -57,6 +56,17 @@ function RegisterPage(){
               value={createUserData.username}
               onChange={(e) =>
                 setCreateUserData({...createUserData, username: e.target.value,
+                })
+              }
+              variant={'outline'}
+              borderColor={'teal'}
+            />
+            <Input
+              type="email"  // 使用 type="email" 來設置輸入 email 的 input
+              placeholder="Email"
+              value={createUserData.email}
+              onChange={(e) =>
+                setCreateUserData({...createUserData, email: e.target.value,
                 })
               }
               variant={'outline'}
@@ -89,12 +99,12 @@ function RegisterPage(){
               colorScheme="teal" 
               width="150px" 
               onClick={handleCreateUser}
-              isDisabled={createUserData.username === "" || createUserData.password ==="" || createUserData.birthday === ""}
+              isDisabled={createUserData.username === "" || createUserData.email === "" || createUserData.password ==="" || createUserData.birthday === ""}
             >
               Confirm
             </Button>
             <Text 
-              fontSize="8px"
+              fontSize="10px"
               color="black"
               fontWeight="light"
             >

@@ -13,17 +13,20 @@ function Home(){
             <VStack spacing={4}  align="center">            
                 <Text 
                     fontFamily="Arial, sans-serif"
-                    fontSize="50px" 
+                    fontSize="40px" 
                     color="gray.700" 
                     fontWeight="bold"
                 >
-                    Welcome
+                    Welcome to StreamCinema
                 </Text>
                 <Link href='/login'>
                     <Button colorScheme="teal" width="150px">Login</Button>
-                </Link>
+                </Link>-
                 <Link href='/register'>
                     <Button colorScheme="teal" width="150px">Register</Button>
+                </Link>
+                <Link href='/watch'>
+                    <Button colorScheme="teal" width="150px">Watch Video</Button>
                 </Link>
             </VStack>
         </Center>

@@ -10,6 +10,7 @@ import Home from './Home';
 import RegisterPage from './RegisterPage';
 import AdminPage from './AdminPage';
 import UserPage from './UserPage';
+import WatchVideoPage from './WatchVideo';
 
 function App() {
   const [token, setToken] = useState(''); 
@@ -22,11 +23,9 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<LoginPage setNewToken={setToken}/>} />
               <Route path="/register" element={<RegisterPage />} />
-              <Route 
-                path="/admin"
-                element={<AdminPage token={token} />} 
-              />
+              <Route path="/admin" element={<AdminPage token={token} />} />
               <Route path="/user" element={<UserPage token={token} />} />
+              <Route path="/watch" element={<WatchVideoPage/>} />
             </Routes>
           </BrowserRouter>
       </Box>

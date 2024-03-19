@@ -60,17 +60,18 @@ function AdminPage(props){
 
     const handleGetAllUser = async () => {
         try {
-        const response = await fetch(`http://${HOSTNAME}/`,{
-            method: 'GET',
-            headers: {
-                Authorization: token,
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-        });
-        const data = await response.json();
-        setUsers(data.users);
-        } catch (error) {
-        console.error('Error fetching users:', error);
+            const response = await fetch(`http://${HOSTNAME}/`,{
+                method: 'GET',
+                headers: {
+                    Authorization: token,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            });
+            const data = await response.json();
+            setUsers(data.users);
+        } 
+        catch (error) {
+            console.error('Error fetching users:', error);
         }
     };
 

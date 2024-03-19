@@ -14,13 +14,13 @@ function UserPage(props){
     const token = props.token;
     const [userData, setUserData] = useState({
         username: '',
+        email: '',
         password: '',
         birthday: '',
-        last_login: '',
-        create_time: '',
     });
     const [updateUserData, setUpdateUserData] = useState({
         username: '',
+        email:'',
         password: '',
         birthday: '',
     });
@@ -62,18 +62,18 @@ function UserPage(props){
 
     const handleUpdateUser = async () => {
         try {
-        await fetch(`http://${HOSTNAME}/user/`, {
-            method: 'PATCH',
-            headers: {
-            'Content-Type': 'application/json',
-            Authorization: token,
-            },
-            body: JSON.stringify(updateUserData),
-        });
-        setMessage('User updated');
-        setUpdateUserData({password: '', birthday:''});
+            await fetch(`http://${HOSTNAME}/user/`, {
+                method: 'PATCH',
+                headers: {
+                    Authorization: token,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updateUserData),
+            });
+            setMessage('User updated');
+            // setUpdateUserData({password: '', birthday:''});
         } catch (error) {
-        setMessage('Unauthorized');
+            setMessage('Unauthorized');
         }
     };
 
@@ -95,7 +95,7 @@ function UserPage(props){
                         colorScheme={showUserData ? 'red' : 'teal'}
                         minWidth="200px"            
                     >
-                        Self Info
+                        User Info
                         {/* {showUserData ? "Hide Info" : "Self Info"} */}
                     </Button>
                     <Button 
@@ -116,6 +116,7 @@ function UserPage(props){
                     <>
                         <VStack alignItems="flex-start" ml={4}>
                             <Text fontSize="18px">Username: {userData.username}</Text>
+                            <Text fontSize="18px">Email: {userData.email}</Text>
                             {/* <Text fontSize="20px">Password: {userData.password}</Text> */}
                             <Text fontSize="18px">Birthday: {userData.birthday}</Text>
                             <Text fontSize="18px">Last Login: {userData.last_login}</Text>
@@ -142,6 +143,19 @@ function UserPage(props){
                                 })
                                 }
                             />
+                            <Input                                
+                                type="email"
+                                placeholder="email"
+                                value={updateUserData.email}
+                                variant={'outline'}
+                                borderColor={'teal'}                    
+                                onChange={(e) =>
+                                setUpdateUserData({
+                                    ...updateUserData,
+                                    email: e.target.value,
+                                })
+                                }
+                            />
                             <Input
                                 type="text"
                                 placeholder="Birthday (YYYY-mm-dd)"
@@ -160,7 +174,7 @@ function UserPage(props){
                                     handleUpdateUser();
                                 }} 
                                 colorScheme="teal"
-                                isDisabled={updateUserData.password === "" || updateUserData.birthday ===""}
+                                isDisabled={updateUserData.password === "" || updateUserData.birthday ==="" || updateUserData.email ===""}
                             >
                                 Confirm
                             </Button>
