@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Date, UnicodeText, DateTime, LargeBinary
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Date, DateTime, LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -22,8 +22,8 @@ class Video(Base):
     video_id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(100), nullable=False)
     description = Column(Text)
-    # url = Column(String(255), nullable=False)
-    video_data = Column(LargeBinary)
+    url = Column(String(255))
+    # video_data = Column(LargeBinary)
 
 class UserVideo(Base):
     __tablename__ = 'user_videos'

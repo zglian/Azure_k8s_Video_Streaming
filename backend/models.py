@@ -17,6 +17,7 @@ class VideoModel(BaseModel):
     video_id: int
     title: str
     description: str 
+    url: str
 
 class User(Base):
     __tablename__ = 'users'
@@ -34,7 +35,8 @@ class Video(Base):
     video_id = Column(Integer, primary_key=True)
     title = Column(String(100), nullable=False)
     description = Column(Text)
-    video_data = Column(LargeBinary)
+    url = Column(String(255))
+    # video_data = Column(LargeBinary)
 
 class UserVideo(Base):
     __tablename__ = 'user_videos'

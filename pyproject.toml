@@ -17,6 +17,7 @@ psycopg2 = "^2.9.6"
 pygame = "^2.5.2"
 pytz = "^2024.1"
 pathlib = "^1.0.1"
+opencv-python = "^4.9.0.80"
 
 
 [build-system]

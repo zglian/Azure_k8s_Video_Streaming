@@ -11,6 +11,7 @@ import RegisterPage from './RegisterPage';
 import AdminPage from './AdminPage';
 import UserPage from './UserPage';
 import WatchVideoPage from './WatchVideo';
+import VideoUpload from './VideoUploader';
 
 function App() {
   const [token, setToken] = useState(''); 
@@ -25,7 +26,8 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/admin" element={<AdminPage token={token} />} />
               <Route path="/user" element={<UserPage token={token} />} />
-              <Route path="/watch" element={<WatchVideoPage/>} />
+              <Route path="/video" element={<WatchVideoPage/>} />
+              <Route path="/upload" element={<VideoUpload/>} />
             </Routes>
           </BrowserRouter>
       </Box>

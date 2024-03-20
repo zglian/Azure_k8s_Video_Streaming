@@ -1,19 +1,21 @@
-from fastapi import FastAPI, HTTPException, Header, Form, Depends, UploadFile, File
-from datetime import datetime, date
+from fastapi import FastAPI, HTTPException, Header, Form, Depends, UploadFile, File, Response
+from starlette.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import config
 from hashlib import sha256
 from sqlalchemy.orm import Session
-import os
-from psycopg2.extensions import connection
 from models import *
 import pytz
 from pathlib import Path
-import uuid
+import os
+import cv2
+
 
 from authentication import create_jwt_token, verify_jwt_token
 from database import get_db
 
+
+CHUNK_SIZE = 1024*1024
 DATABASE_URL = config.DATABASE_URL
 SECRET_KEY = config.SECRET_KEY
 ALGORITHM = config.ALGORITHM
@@ -98,15 +100,14 @@ def delete_user(username: str = Form(...), Authorization:str = Header(...), db: 
 
 @app.patch("/user/")
 def update_user(user: UserModel, Authorization: str = Header(...), db: Session = Depends(get_db)):
-    if not user.username or not user.password:
-        raise HTTPException(status_code=400, detail="Invalid update data: Password is required")
-    
+    # if not user.username or not user.password:
+    #     raise HTTPException(status_code=400, detail="Invalid update data: Password is required")
     result = verify_identity(Authorization, db)
-    if user.username != result.username:
-        raise HTTPException(status_code=403, detail="Forbidden: User can only update their own information")
+    # if user.username != result.username:
+    #     raise HTTPException(status_code=403, detail="Forbidden: User can only update their own information")
     
-    existing_user = db.query(User).filter(User.username == user.username).first()
-    if not existing_user:
+    existing_user = db.query(User).filter(User.username == result.username).first()
+    if existing_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     
     existing_user.password = sha256(user.password.encode('utf-8')).hexdigest()
@@ -160,21 +161,87 @@ async def upload_video(video_upload: VideoModel, video_data: UploadFile = File(.
     db.commit()
     return {"message": "Video uploaded successfully"}
 
-@app.post("/watch-video/{video_id}/")
-def watch_video(video_id: int, Authorization: str = Header(...), db: Session = Depends(get_db)):
-    user = verify_identity(Authorization, db)
+# @app.post("/watch-video/{video_id}/")
+# def watch_video(video_id: int, Authorization: str = Header(...), db: Session = Depends(get_db)):
+#     user = verify_identity(Authorization, db)
     
-    video = db.query(Video).filter(Video.video_id == video_id).first()
-    if not video:
-        raise HTTPException(status_code=404, detail="Video not found")
+#     video = db.query(Video).filter(Video.video_id == video_id).first()
+#     if not video:
+#         raise HTTPException(status_code=404, detail="Video not found")
 
-    # 標記該用戶觀看了這個影片
-    user_video = db.query(UserVideo).filter(UserVideo.username == user.username, UserVideo.video_id == video_id).first()
-    if user_video:
-        user_video.watched_at = datetime.utcnow()
-    else:
-        user_video = UserVideo(username=user.username, video_id=video_id, watched_at=datetime.utcnow())
-        db.add(user_video)
+#     # 標記該用戶觀看了這個影片
+#     user_video = db.query(UserVideo).filter(UserVideo.username == user.username, UserVideo.video_id == video_id).first()
+#     if user_video:
+#         user_video.watched_at = datetime.utcnow()
+#     else:
+#         user_video = UserVideo(username=user.username, video_id=video_id, watched_at=datetime.utcnow())
+#         db.add(user_video)
     
-    db.commit()
-    return {"message": "Video watched successfully"}
+#     db.commit()
+#     return {"message": "Video watched successfully"}
+
+# video_path = Path("video-1.mp4")
+
+
+@app.get("/video/{video_name}")
+async def video_endpoint(video_name: str):
+    video_path = Path(f"./videos/{video_name}")
+    return FileResponse(video_path, media_type="video/mp4")
+
+'''@app.get("/video/{video_name}")
+async def video_endpoint(video_name: str, range: str = Header(None)):
+    start, end = range.replace("bytes=", "").split("-")
+    start = int(start)
+    end = int(end) if end else start + CHUNK_SIZE
+    video_path = Path(video_name)
+    # video_path = Path("video-1.mp4")
+    with open(video_path, "rb") as video:
+        video.seek(start)
+        data = video.read(end - start)
+        filesize = str(video_path.stat().st_size)
+        headers = {
+            'Content-Range': f'bytes {str(start)}-{str(end)}/{filesize}',
+            'Accept-Ranges': 'bytes'
+        }
+        return Response(data, status_code=206, headers=headers, media_type="video/mp4")
+'''
+
+
+@app.get("/previews/{preview_url}")
+async def video_endpoint(preview_url: str):
+    iamge_path = Path(f"./previews/{preview_url}")
+    return FileResponse(iamge_path, media_type="image/jpg")
+
+@app.get("/videos/")
+async def get_all_video_titles(db: Session = Depends(get_db)):
+    videos_from_db  = db.query(Video).all()
+    videos = []
+    for video in videos_from_db:
+        video_data = {"title": video.title, "url": video.url}
+        preview_image_path = f"./previews/{video.title}.jpg"
+        video_path = f"./videos/{video.url}"
+        generate_preview_image(video_path, preview_image_path)
+        video_data["preview_url"] = video.title + ".jpg"
+        videos.append(video_data)
+    db.close()
+    return {"videos": videos}
+
+def generate_preview_image(video_path: str, preview_image_path: str):
+    cap = cv2.VideoCapture(video_path)
+    ret, frame = cap.read()
+    cv2.imwrite(preview_image_path, frame)
+    cap.release
+
+@app.post("/upload/")
+async def upload_video(video: UploadFile = File(...)):
+    contents = await video.read()
+    # 將 contents 寫入到您的存儲位置，這裡示例中直接返回內容
+     # 指定存儲路徑
+    upload_folder = "upload_videos"
+    # 確保上傳文件夾存在
+    os.makedirs(upload_folder, exist_ok=True)
+    # 寫入文件
+    file_path = os.path.join(upload_folder, video.filename)
+    with open(file_path, "wb") as f:
+        f.write(contents)
+    return file_path

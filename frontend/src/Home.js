@@ -21,12 +21,15 @@ function Home(){
                 </Text>
                 <Link href='/login'>
                     <Button colorScheme="teal" width="150px">Login</Button>
-                </Link>-
+                </Link>
                 <Link href='/register'>
                     <Button colorScheme="teal" width="150px">Register</Button>
                 </Link>
-                <Link href='/watch'>
+                <Link href='/video'>
                     <Button colorScheme="teal" width="150px">Watch Video</Button>
+                </Link>
+                <Link href='/upload'>
+                    <Button colorScheme="teal" width="150px">Upload Video</Button>
                 </Link>
             </VStack>
         </Center>
