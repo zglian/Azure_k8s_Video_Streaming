@@ -23,7 +23,8 @@ class Video(Base):
     title = Column(String(100), nullable=False)
     description = Column(Text)
     url = Column(String(255))
-    # video_data = Column(LargeBinary)
+    uploader_username = Column(String, ForeignKey('users.username'))
+    uploader = relationship("User", backref="uploaded_videos")
 
 class UserVideo(Base):
     __tablename__ = 'user_videos'
@@ -34,3 +35,4 @@ class UserVideo(Base):
 
     user = relationship("User", backref="user_videos")
     video = relationship("Video", backref="user_videos")
+    uploaded_videos = relationship("Video", back_populates="uploader")

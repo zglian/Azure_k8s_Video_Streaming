@@ -72,7 +72,7 @@ function WatchVideoPage() {
                 影片清單
               </Text>
               <Box w="100%">
-                <HStack spacing={5} flexWrap="wrap">
+                <HStack spacing={5} wrap="wrap">
                   {videos.map((video, index) => (
                     <Box
                       key={index}
@@ -80,6 +80,8 @@ function WatchVideoPage() {
                       borderRadius="lg"
                       overflow="hidden"
                       cursor="pointer"
+                      width="200px" // Adjust as needed to control number of boxes per row
+                      marginBottom="4" // Add margin to separate the boxes
                       borderColor={
                         selectedButton === video.title ? 'teal.500' : 'gray.300'
                       }
@@ -88,13 +90,17 @@ function WatchVideoPage() {
                         handleVideoClick(video);
                       }}
                     >
-                      <Image
-                        src={`http://localhost:8000/previews/${video.preview_url}`}
-                        alt={video.title}
-                        width="150px"
-                      />
+                      <Box>
+                        <Image
+                          src={`http://localhost:8000/previews/${video.preview_url}`}
+                          alt={video.title}
+                          width="100%"
+                          height="100%"
+                          objectFit="cover"
+                        />
+                      </Box>
                       <Box p="4">
-                        <Text fontSize="md" fontWeight="">
+                        <Text fontSize="md" wordBreak="break-word">
                           {video.title}
                         </Text>
                       </Box>
@@ -118,7 +124,7 @@ function WatchVideoPage() {
           </Box>
         </HStack>
       ) : (
-        <VStack spacing={8} align="flex-start">
+        <VStack spacing={8} align="center">
           <Text
             fontFamily="Arial, sans-serif"
             fontSize="26px"
@@ -127,15 +133,18 @@ function WatchVideoPage() {
           >
             影片清單
           </Text>
-          <Box maxHeight="500px" overflowY="auto">
-            <HStack spacing={8} flexWrap="wrap">
+          <Box w="100%">
+            <HStack spacing={8} wrap="wrap" justifyContent="center">
               {videos.map((video, index) => (
                 <Box
                   key={index}
                   borderWidth="1px"
-                  borderRadius="lg"
+                  borderRadius="md"
                   overflow="hidden"
                   cursor="pointer"
+                  width="400px"
+                  align="center"
+                  borderColor="gray.400"
                   _hover={{ borderColor: 'teal.500' }}
                   onClick={() => {
                     handleVideoClick(video);
@@ -145,10 +154,16 @@ function WatchVideoPage() {
                   <Image
                     src={`http://localhost:8000/previews/${video.preview_url}`}
                     alt={video.title}
-                    width="150px"
+                    width="100%"
+                    height="100%"
+                    objectFit="cover"
                   />
                   <Box p="4">
-                    <Text fontSize="md" fontWeight="semibold">
+                    <Text
+                      fontSize="light"
+                      fontWeight="semibold"
+                      wordBreak="break-word"
+                    >
                       {video.title}
                     </Text>
                   </Box>

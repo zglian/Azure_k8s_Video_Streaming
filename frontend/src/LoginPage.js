@@ -39,7 +39,8 @@ function LoginPage({ setNewToken }) {
         if (data) {
           const token = data.token;
           // console.log(data.token);
-          setNewToken(token);
+          sessionStorage.setItem('token', token);
+          // setNewToken(token);
           if (username === 'admin') {
             navigate('/admin');
           } else {

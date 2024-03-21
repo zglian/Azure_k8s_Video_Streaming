@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Header, Form, Depends, UploadFile, File, Response
+from fastapi import FastAPI, HTTPException, Header, Form, Depends, UploadFile, File, Response, Body
 from starlette.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import config
@@ -14,7 +14,6 @@ import cv2
 from authentication import create_jwt_token, verify_jwt_token
 from database import get_db
 
-
 CHUNK_SIZE = 1024*1024
 DATABASE_URL = config.DATABASE_URL
 SECRET_KEY = config.SECRET_KEY
@@ -22,6 +21,7 @@ ALGORITHM = config.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES= config.ACCESS_TOKEN_EXPIRE_MINUTES
 
 app = FastAPI()
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,6 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.post("/verify")
 def verify_identity(token: str = Header(..., convert_underscores=True), db: Session= Depends(get_db)):
     payload = verify_jwt_token(token)
     username = payload["username"]
@@ -136,31 +137,6 @@ def get_all_users(Authorization:str = Header(...), db: Session = Depends(get_db)
 
     return {"users": users}
 
-@app.post("/upload-video/")
-async def upload_video(video_upload: VideoModel, video_data: UploadFile = File(...), db: Session = Depends(get_db)):
-    title = video_upload.title
-    description = video_upload.description
-    # title = "video1"
-    # description = "video_upload.description"
-    
-    # with open(f"../video_dataset/{video_data.filename}", "wb") as f:
-    #     f.write(video_data.file.read())
-
-    video_file_path = '../video_dataset/video-1.mp4'  # 更新為影片檔案的正確路徑
-    with open(video_file_path, 'rb') as f:
-        video_data = f.read()
-
-    # video_id = uuid.uuid4()
-
-    new_video = Video(title=title, description=description, video_data=video_data)
-    db.add(new_video)
-    db.commit()
-
-    # # 關聯上傳的視頻與用戶
-    # new_video.usernames.append(username)
-    db.commit()
-    return {"message": "Video uploaded successfully"}
-
 # @app.post("/watch-video/{video_id}/")
 # def watch_video(video_id: int, Authorization: str = Header(...), db: Session = Depends(get_db)):
 #     user = verify_identity(Authorization, db)
@@ -183,9 +159,11 @@ async def upload_video(video_upload: VideoModel, video_data: UploadFile = File(.
 # video_path = Path("video-1.mp4")
 
 
-@app.get("/video/{video_name}")
-async def video_endpoint(video_name: str):
-    video_path = Path(f"./videos/{video_name}")
+@app.get("/video/{url:path}")
+async def video_endpoint(url: str):
+    video_path = Path(f"./{url}")
+    # video_path = Path(f'./upload_videos/video-6.mp4')
+    # return video_path
     return FileResponse(video_path, media_type="video/mp4")
 
 '''@app.get("/video/{video_name}")
@@ -219,8 +197,9 @@ async def get_all_video_titles(db: Session = Depends(get_db)):
     for video in videos_from_db:
         video_data = {"title": video.title, "url": video.url}
         preview_image_path = f"./previews/{video.title}.jpg"
-        video_path = f"./videos/{video.url}"
-        generate_preview_image(video_path, preview_image_path)
+        if not Path(preview_image_path).exists():
+            video_path = f"./{video.url}"
+            generate_preview_image(video_path, preview_image_path)
         video_data["preview_url"] = video.title + ".jpg"
         videos.append(video_data)
     db.close()
@@ -233,15 +212,36 @@ def generate_preview_image(video_path: str, preview_image_path: str):
     cap.release
 
 @app.post("/upload/")
-async def upload_video(video: UploadFile = File(...)):
+async def upload_video(video: UploadFile = File(...),
+                       title: str = Form(),
+                       description: str = Form(),
+                       uploader_username: str = Form(),
+                       db: Session = Depends(get_db)):
     contents = await video.read()
-    # 將 contents 寫入到您的存儲位置，這裡示例中直接返回內容
-     # 指定存儲路徑
-    upload_folder = "upload_videos"
-    # 確保上傳文件夾存在
+    upload_folder = "upload_vidoes"
     os.makedirs(upload_folder, exist_ok=True)
-    # 寫入文件
     file_path = os.path.join(upload_folder, video.filename)
     with open(file_path, "wb") as f:
         f.write(contents)
-    return file_path
+    new_video = Video(title=title,
+                    description=description,
+                    url=file_path,
+                    uploader_username=uploader_username)
+    db.add(new_video)
+    db.commit()
+    return new_video
+
+
+
+@app.post("/upload-data/")
+async def upload_video_data(video_upload: VideoModel, db: Session = Depends(get_db)):
+    new_video = Video(title=video_upload.title,
+                        description=video_upload.description,
+                        url=video_upload.url)
+    db.add(new_video)
+    db.commit()
+
+    # # 關聯上傳的視頻與用戶
+    # new_video.usernames.append(username)
+    # db.commit()
+    return {"message": "Video uploaded successfully"}
