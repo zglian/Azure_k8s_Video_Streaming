@@ -59,7 +59,7 @@ function WatchVideoPage() {
         Back
       </Link>
       {showVideo ? (
-        <HStack spacing={8} marginTop="20px">
+        <HStack spacing={8} marginTop="40px">
           {/* 影片清單 */}
           <Box w="35%" pl="25px">
             <VStack spacing={5} align="flex-start">
@@ -67,7 +67,7 @@ function WatchVideoPage() {
                 fontFamily="Arial, sans-serif"
                 fontSize="26px"
                 color="teal.500"
-                fontWeight="bold"
+                fontWeight="md"
               >
                 影片清單
               </Text>
@@ -77,11 +77,11 @@ function WatchVideoPage() {
                     <Box
                       key={index}
                       borderWidth="1px"
-                      borderRadius="lg"
+                      borderRadius="md"
                       overflow="hidden"
                       cursor="pointer"
                       width="200px" // Adjust as needed to control number of boxes per row
-                      marginBottom="4" // Add margin to separate the boxes
+                      marginBottom="3" // Add margin to separate the boxes
                       borderColor={
                         selectedButton === video.title ? 'teal.500' : 'gray.300'
                       }

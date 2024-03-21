@@ -79,6 +79,10 @@ function UserPage(props) {
     }
   };
 
+  const handleLogout = () => {
+    sessionStorage.removeItem('token');
+  };
+
   return (
     <VStack minH="80vh" alignItems="center" marginTop="100px">
       <VStack spacing={4} align="center">
@@ -91,6 +95,16 @@ function UserPage(props) {
           color="teal.500"
         >
           Back
+        </Link>
+        <Link
+          onClick={handleLogout}
+          position="absolute"
+          top="14px"
+          right="14px"
+          fontSize="20px"
+          href="/"
+        >
+          Logout
         </Link>
         <HStack spacing={6} alignItems="center" minWidth="20px">
           <Button
@@ -116,7 +130,6 @@ function UserPage(props) {
             minWidth="200px"
           >
             Update data
-            {/* {showUpdate ? "Hide Update" : "Update data"} */}
           </Button>
           <Link href="/upload">
             <Button colorScheme="teal" width="150px">
@@ -130,7 +143,6 @@ function UserPage(props) {
               <VStack alignItems="flex-start" ml={4}>
                 <Text fontSize="18px">Username: {userData.username}</Text>
                 <Text fontSize="18px">Email: {userData.email}</Text>
-                {/* <Text fontSize="20px">Password: {userData.password}</Text> */}
                 <Text fontSize="18px">Birthday: {userData.birthday}</Text>
                 <Text fontSize="18px">Last Login: {userData.last_login}</Text>
                 <Text fontSize="18px">Create Time: {userData.create_time}</Text>
