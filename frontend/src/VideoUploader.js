@@ -29,6 +29,7 @@ function VideoUpload() {
           method: 'POST',
           headers: {
             token: token,
+            'Content-Type': 'application/x-www-form-urlencoded',
           },
         });
         if (response.ok) {
@@ -95,10 +96,16 @@ function VideoUpload() {
       setMessage('Uploading...');
       await fetch(`http://${HOSTNAME}/upload/video`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: formData,
       });
       await fetch(`http://${HOSTNAME}/upload/image`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: formData,
       });
       setVideoData({

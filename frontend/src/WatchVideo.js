@@ -20,7 +20,12 @@ function WatchVideoPage() {
   // 從後端獲取影片清單
   useEffect(() => {
     async function fetchVideos() {
-      const response = await fetch(`http://${HOSTNAME}/videos/`);
+      const response = await fetch(`http://${HOSTNAME}/videos/`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       const data = await response.json();
       console.log(data);
       setVideos(data.videos);

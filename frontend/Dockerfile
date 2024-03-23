@@ -1,6 +1,5 @@
-# 使用官方的 Node.js 映像
-FROM node:20
-WORKDIR /app
+FROM node:latest
+WORKDIR /frontend
 COPY package*.json ./
 RUN npm install
 COPY . .
