@@ -92,7 +92,7 @@ function WatchVideoPage() {
                       <Box>
                         <Image
                           src={`${STORAGE}/image/${video.preview_url}`}
-                          // alt={video.title}
+                          alt={video.title}
                           width="100%"
                           height="100%"
                           objectFit="cover"
@@ -114,7 +114,7 @@ function WatchVideoPage() {
           <Box w="75%">
             <Box>
               <video width="850" controls autoPlay muted>
-                <source src={`${STORAGE}/${url}`} type="video/mp4" />
+                <source src={`${STORAGE}/video/${url}`} type="video/mp4" />
               </video>
             </Box>
           </Box>
