@@ -9,7 +9,6 @@ from .database import get_db
 
 router = APIRouter()
 
-
 @router.post("/login")
 async def login(username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
     password_hash = sha256(password.encode('utf-8')).hexdigest()

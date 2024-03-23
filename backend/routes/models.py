@@ -1,9 +1,8 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Date, UnicodeText, DateTime, LargeBinary
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Date, UnicodeText, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime, date
 from pydantic import BaseModel
-from dataclasses import dataclass
 
 Base = declarative_base()
 
