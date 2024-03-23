@@ -1,6 +1,5 @@
 import React from 'react';
 import { Text, Button, VStack, Center, Link } from '@chakra-ui/react';
-
 function Home() {
   return (
     <Center minH="80vh">
@@ -34,12 +33,6 @@ function Home() {
           </Button>
         </Link>
       </VStack>
-      {/* <video width="850" controls autoPlay muted>
-        <source
-          src="https://zhistorage.blob.core.windows.net/video/video-4.mp4"
-          type="video/mp4"
-        />
-      </video> */}
     </Center>
   );
 }

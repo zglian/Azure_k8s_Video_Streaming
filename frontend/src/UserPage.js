@@ -73,7 +73,6 @@ function UserPage() {
         body: JSON.stringify(updateUserData),
       });
       setMessage('User updated');
-      // setUpdateUserData({password: '', birthday:''});
     } catch (error) {
       setMessage('Unauthorized');
     }

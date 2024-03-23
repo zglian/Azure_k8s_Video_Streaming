@@ -23,13 +23,11 @@ function LoginPage({ setNewToken }) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        // 'Origin': 'http://ecpaas.ddns.net:32700'
       },
       body: `username=${username}&password=${password}`,
     })
       .then(response => {
         if (response.ok) {
-          // setMessage(`Logged in as ${username}`);
           return response.json();
         } else {
           setMessage(`Login failed`);

@@ -9,7 +9,7 @@ import {
   Spacer,
   Link,
 } from '@chakra-ui/react';
-import { HOSTNAME } from './config.js';
+import { HOSTNAME, STORAGE } from './config.js';
 
 function WatchVideoPage() {
   const [videos, setVideos] = useState([]);
@@ -79,8 +79,8 @@ function WatchVideoPage() {
                       borderRadius="md"
                       overflow="hidden"
                       cursor="pointer"
-                      width="200px" // Adjust as needed to control number of boxes per row
-                      marginBottom="3" // Add margin to separate the boxes
+                      width="200px"
+                      marginBottom="3"
                       borderColor={
                         selectedButton === video.title ? 'teal.500' : 'gray.300'
                       }
@@ -91,8 +91,8 @@ function WatchVideoPage() {
                     >
                       <Box>
                         <Image
-                          src={`http://${HOSTNAME}/previews/${video.preview_url}`}
-                          alt={video.title}
+                          src={`${STORAGE}/image/${video.preview_url}`}
+                          // alt={video.title}
                           width="100%"
                           height="100%"
                           objectFit="cover"
@@ -114,10 +114,7 @@ function WatchVideoPage() {
           <Box w="75%">
             <Box>
               <video width="850" controls autoPlay muted>
-                <source
-                  src={`http://${HOSTNAME}/video/${url}`}
-                  type="video/mp4"
-                />
+                <source src={`${STORAGE}/${url}`} type="video/mp4" />
               </video>
             </Box>
           </Box>
@@ -148,10 +145,10 @@ function WatchVideoPage() {
                   onClick={() => {
                     handleVideoClick(video);
                   }}
-                  marginBottom="8px" // Add some bottom margin to separate the boxes
+                  marginBottom="8px"
                 >
                   <Image
-                    src={`http://localhost:8000/previews/${video.preview_url}`}
+                    src={`${STORAGE}/image/${video.preview_url}`}
                     alt={video.title}
                     width="100%"
                     height="100%"

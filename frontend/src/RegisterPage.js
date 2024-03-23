@@ -70,7 +70,7 @@ function RegisterPage() {
           borderColor={'teal'}
         />
         <Input
-          type="email" // 使用 type="email" 來設置輸入 email 的 input
+          type="email"
           placeholder="Email"
           value={createUserData.email}
           onChange={e =>
