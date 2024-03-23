@@ -1,4 +1,4 @@
 .gitignore
-build/
 node_modules/
 README.md
+.prettierrc
