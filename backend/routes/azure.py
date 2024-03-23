@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Header, Form, Depends, UploadFile, APIRouter
+from fastapi import HTTPException, Header, Form, Depends, UploadFile, APIRouter
 from sqlalchemy.orm import Session
 from .models import *
 import cv2

@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Header, Form, Depends
 from sqlalchemy.orm import Session
 from .models import *
 from .database import get_db
-from .users import verify_jwt_token, verify_identity
+from .users import verify_identity
 from .config import *
 
 router = APIRouter()
