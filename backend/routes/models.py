@@ -3,7 +3,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from datetime import datetime, date
 from pydantic import BaseModel
-from fastapi import FastAPI, Form, Depends, UploadFile
 from dataclasses import dataclass
 
 Base = declarative_base()

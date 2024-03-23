@@ -13,7 +13,6 @@ function App() {
   return (
     <ChakraProvider theme={theme}>
       <Box bg="gray.200" minH="100vh" py={8}>
-        {/* <Text>{token}</Text> */}
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />

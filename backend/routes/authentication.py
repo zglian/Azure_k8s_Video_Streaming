@@ -1,11 +1,9 @@
 from fastapi import HTTPException
 from jose import jwt
 from datetime import datetime, date, timedelta
-import config
+from . import config
 from passlib.context import CryptContext
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-# from sqlalchemy.orm import Session
-# from models import User
+from fastapi.security import OAuth2PasswordBearer
 
 DATABASE_URL = config.DATABASE_URL
 SECRET_KEY = config.SECRET_KEY 
@@ -29,9 +27,3 @@ def verify_jwt_token(token: str) -> dict:
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-
-# def verify_user_from_db(username: str, db: Session):
-#     user = db.query(User).filter(User.username == username).first()
-#     if user and user.password:
-#         return user.password
-#     return None

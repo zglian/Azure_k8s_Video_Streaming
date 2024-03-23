@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Text,
-  // Button,
   VStack,
   Center,
   HStack,
@@ -92,7 +91,7 @@ function WatchVideoPage() {
                     >
                       <Box>
                         <Image
-                          src={`http://localhost:8000/previews/${video.preview_url}`}
+                          src={`http://${HOSTNAME}/previews/${video.preview_url}`}
                           alt={video.title}
                           width="100%"
                           height="100%"
@@ -116,7 +115,7 @@ function WatchVideoPage() {
             <Box>
               <video width="850" controls autoPlay muted>
                 <source
-                  src={`http://localhost:8000/video/${url}`}
+                  src={`http://${HOSTNAME}/video/${url}`}
                   type="video/mp4"
                 />
               </video>

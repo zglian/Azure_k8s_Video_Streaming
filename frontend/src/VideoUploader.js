@@ -90,11 +90,14 @@ function VideoUpload() {
       formData.append('video', selectedFile);
       formData.append('title', videoData.title);
       formData.append('description', videoData.description);
-      // formData.append('url', videoData.url);
       formData.append('uploader_username', videoData.uploader_username);
 
-      console.log(formData);
-      await fetch(`http://${HOSTNAME}/upload`, {
+      setMessage('Uploading...');
+      await fetch(`http://${HOSTNAME}/upload/video`, {
+        method: 'POST',
+        body: formData,
+      });
+      await fetch(`http://${HOSTNAME}/upload/image`, {
         method: 'POST',
         body: formData,
       });
@@ -168,7 +171,8 @@ function VideoUpload() {
           isDisabled={
             videoData.description === '' ||
             videoData.title === '' ||
-            !selectedFile
+            !selectedFile ||
+            message === 'Uploading...'
           }
         >
           Upload Video

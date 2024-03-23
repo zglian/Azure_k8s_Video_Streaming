@@ -10,7 +10,7 @@ import {
 } from '@chakra-ui/react';
 import { HOSTNAME } from './config.js';
 
-function UserPage(props) {
+function UserPage() {
   const token = sessionStorage.getItem('token');
   const [userData, setUserData] = useState({
     username: '',
@@ -113,31 +113,28 @@ function UserPage(props) {
               setShowUpdate(false);
               handleGetUser();
             }}
-            textAlign="left"
             colorScheme={showUserData ? 'red' : 'teal'}
             minWidth="200px"
           >
             User Info
-            {/* {showUserData ? "Hide Info" : "Self Info"} */}
           </Button>
           <Button
             onClick={() => {
               setShowUpdate(!showUpdate);
               setShowUserData(false);
             }}
-            ml={4}
             colorScheme={showUpdate ? 'red' : 'teal'}
             minWidth="200px"
           >
             Update data
           </Button>
           <Link href="/upload">
-            <Button colorScheme="teal" width="150px">
+            <Button colorScheme="teal" minWidth="200px">
               Upload Video
             </Button>
           </Link>
         </HStack>
-        <Box>
+        <Box marginTop={3}>
           {showUserData && (
             <>
               <VStack alignItems="flex-start" ml={4}>

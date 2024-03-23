@@ -34,6 +34,12 @@ function Home() {
           </Button>
         </Link>
       </VStack>
+      {/* <video width="850" controls autoPlay muted>
+        <source
+          src="https://zhistorage.blob.core.windows.net/video/video-4.mp4"
+          type="video/mp4"
+        />
+      </video> */}
     </Center>
   );
 }
