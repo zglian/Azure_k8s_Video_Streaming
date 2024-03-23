@@ -1,0 +1,6 @@
+video_alembic/
+__pycache__/
+*.ini
+README.md
+alembic/
+frontend/
