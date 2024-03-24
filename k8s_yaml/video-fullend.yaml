@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: api
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: api
@@ -15,6 +15,13 @@ spec:
       containers:
         - name: api
           image: zglian/video-app-backend:latest
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 1000Mi
           ports:
             - containerPort: 8000
 ---
@@ -33,7 +40,7 @@ kind: Deployment
 metadata:
   name: website
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: website
@@ -45,6 +52,13 @@ spec:
       containers:
         - name: website
           image: zglian/video-app-frontend:latest
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 1000Mi
           ports:
             - containerPort: 3000
 ---
