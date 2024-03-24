@@ -6,6 +6,11 @@
 /backend/previews
 
 
+
+todo.txt
+
+
 #exclude config file
 /frontend/src/config.js
 /backend/routes/config.py
+alembic.ini
