@@ -5,4 +5,7 @@
 *.pyc
 /backend/previews
 
+
+#exclude config file
 /frontend/src/config.js
+/backend/routes/config.py
