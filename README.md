@@ -30,20 +30,29 @@ This is a video playback system that consists of two roles: users and administra
 
 ## Feature
 
-basic function
+**Basic Functions:**
 
-login as user, login as admin, modify data...
+- User login
+- Admin login
+- Modify user data
 
-<img src="img/login.jpg" alt="Login" width="300">
+- Admin Privileges:
 
-watch video
+  - Ability to delete users
+  - Access to view all user data
 
-<img src="img/video-1.jpg" alt="Video 1" width="300">
-<img src="img/video-2.jpg" alt="Video 2" width="300">
+<img src="img/login.jpg" alt="Login" width="500">
 
-upload video
+**watch video**
 
-<img src="img/upload.jpg" alt="Upload" width="300">
+<img src="img/video-1.jpg" alt="Video 1" width="500">
+<img src="img/video-2.jpg" alt="Video 2" width="500">
+
+**upload video**
+
+after login, user can upload videos
+
+<img src="img/upload.jpg" alt="Upload" width="500">
 
 ## Demo Video
 
