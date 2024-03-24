@@ -94,18 +94,12 @@ function VideoUpload() {
       formData.append('uploader_username', videoData.uploader_username);
 
       setMessage('Uploading...');
-      await fetch(`http://${HOSTNAME}/upload/video`, {
+      await fetch(`http://${HOSTNAME}/upload/video/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: formData,
       });
-      await fetch(`http://${HOSTNAME}/upload/image`, {
+      await fetch(`http://${HOSTNAME}/upload/image/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: formData,
       });
       setVideoData({
