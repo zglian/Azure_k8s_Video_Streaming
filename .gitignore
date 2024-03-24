@@ -4,3 +4,5 @@
 *.mp4
 *.pyc
 /backend/previews
+
+/frontend/src/config.js
