@@ -1,4 +1,4 @@
-# Fullend Video Streaming System
+# Full-stack Video Streaming System
 
 ## Overview
 
